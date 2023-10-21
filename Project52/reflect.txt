@@ -1,0 +1,41 @@
+
+
+/*/////////////////////////////////////////////////////////////////////////
+Workshop - #4 (P2)
+Name : Nishnath Bandari
+Student ID : 105202220
+Email : nbandari1@myseneca.ca
+Course & Section   : BTP300 NCC
+Date of completion : October, 2023
+
+Authenticity Declaration :
+I have done all the coding by myself and only copied the code that my professor provided to complete my workshops and assignments.
+/////////////////////////////////////////////////////////////////////////*/
+
+
+Through this workshop, I have learnt how to design and code composition and aggregation class relationships, and also how to design and code a class that manages dynamically allocated array of pointers to objects i.e., double pointers.
+
+In our workshop, we're working with two classes: 'CheeseShop' and 'CheeseParty.' They both have something called 'const Cheese**,' but they handle 'Cheese' objects differently.
+
+In a 'CheeseShop,' it's like the shop owns and controls the cheese. It creates new cheese, takes care of them, and can even make them disappear. But in a 'CheeseParty,' it's more like the party-goers know about the cheese but don't really control it.
+
+When we move or copy things in a 'CheeseShop,' we have to be careful because the shop is in charge of the cheese's whole life. So, if we move or copy a cheese, we have to do it thoroughly. In a 'CheeseParty,' since the party doesn't control the cheese's life, moving or copying can be simpler, usually just pointing to the cheese.
+
+Both classes have functions called 'addCheese.' These functions do the job of adding a 'Cheese' object to their collections. But in a 'CheeseShop,' it might make a brand-new cheese and watch over it, while in a 'CheeseParty,' it might just add a reference to an existing cheese.
+
+Now, let's talk about the 'removeCheese' function in a 'CheeseShop.' Since the shop owns the cheese, when it removes one, it not only throws away the cheese (deletes it) but also updates its list to show that the cheese is gone. Imagine it like the shop not only tossing out the cheese but also updating its list to say that the cheese is no longer available.
+A pseudocode representation of 'removeCheese' in 'CheeseShop' could be as follows:
+
+CheeseShop::removeCheese(index) {
+    // Delete the cheese object at the specified index
+    delete cheese[index];
+    
+    // Adjust the array or collection accordingly 
+(e.g., removing the reference to the deleted cheese)
+}
+In essence, within a composition association, such as the one in 'CheeseShop,' the 'removeCheese' function has the dual responsibility of 
+freeing up the memory occupied by the cheese object and making essential modifications to the data structure that contains the cheeses.
+
+
+
+
