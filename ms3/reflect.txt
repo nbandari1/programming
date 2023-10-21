@@ -1,0 +1,27 @@
+/*/////////////////////////////////////////////////////////////////////////
+Reflect
+Name : Nishnath Bandari
+Student ID : 105202220
+Email : nbandari1@myseneca.ca
+Course & Section   : BTP200 NAA
+Date of completion : August 1, 2023
+
+Authenticity Declaration :
+I have done all the coding by myself and only copied the code that my professor provided to complete my workshops and assignments.
+/////////////////////////////////////////////////////////////////////////*/
+
+rule of three, 
+
+In this workshop I learnt about the rule of three and how to implement it while also integrating skills learnt from previous workshops like using the virtual keyword etc.
+The rule of three says that a copy constructor, copy assignment operator and destructor need to be defined usually for the building of exception-safe code. The copy constructor constructs all the object's members from the members of the copy constructor's argument. The copy assignment operator assigns all the object's members from the members of the assignment operator's argument. And the destructor deletes the object's class-type members.
+In the case of the workshop, the copy assignment operator in the Text class is:
+
+Text& operator=(const Text& text);
+
+and the copy constructor is:
+
+Text(const Text& text);
+
+and the destructor is:
+
+virtual ~Text();

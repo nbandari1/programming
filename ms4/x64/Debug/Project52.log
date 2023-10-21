@@ -1,0 +1,9 @@
+﻿  Book.cpp
+C:\Users\14374\source\repos\Project52\Book.cpp(58,9): error C2039: 'strnCpy': is not a member of 'std'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\iomanip(23,1): message : see declaration of 'std'
+  Date.cpp
+  Publication.cpp
+  Streamable.cpp
+  Utils.cpp
+  ms4_tester.cpp
+  Generating Code...
