@@ -75,7 +75,6 @@ export default function SearchScreen() {
               }
             }
   
-            // If geocoding fails, use fallback coords (e.g. downtown Toronto)
             if (!coordinate) {
               coordinate = {
                 latitude: 43.6532,
@@ -83,7 +82,6 @@ export default function SearchScreen() {
               };
             }
   
-            // Fetch owner info
             let ownerName = 'N/A';
             if (listing.owner) {
               const ownerRef = doc(db, 'users', listing.owner);
@@ -115,7 +113,6 @@ export default function SearchScreen() {
       setLoading(false);
     }
   };
-  
 
   const centerMapToCity = async () => {
     try {
@@ -145,22 +142,19 @@ export default function SearchScreen() {
         return;
       }
   
-      // Delete existing booking for this user
       const q = query(collection(db, 'bookings'), where('renterId', '==', renterId));
       const existing = await getDocs(q);
       existing.forEach(async (docu) => {
         await deleteDoc(doc(db, 'bookings', docu.id));
       });
   
-      // Get renter's first and last name
       const userRef = doc(db, 'users', renterId);
       const userSnap = await getDoc(userRef);
       const renterFirstName = userSnap.exists() ? userSnap.data().firstName : 'N/A';
       const renterLastName = userSnap.exists() ? userSnap.data().lastName : 'N/A';
   
-      const code = Math.floor(100000 + Math.random() * 900000); // 6-digit confirmation code
+      const code = Math.floor(100000 + Math.random() * 900000);
   
-      // Create booking with image included
       await addDoc(collection(db, 'bookings'), {
         renterId,
         renterFirstName,
@@ -172,7 +166,7 @@ export default function SearchScreen() {
         cost: car.cost,
         address: car.address,
         city: car.city,
-        photo: car.imageUrl || null,  // 👈 Add image here
+        photo: car.imageUrl || null,
         confirmationCode: code,
         ownerId: car.owner,
         status: 'booked',
@@ -189,7 +183,6 @@ export default function SearchScreen() {
       Alert.alert('Booking Failed', 'Try again later.');
     }
   };
-  
 
   return (
     <View style={styles.container}>

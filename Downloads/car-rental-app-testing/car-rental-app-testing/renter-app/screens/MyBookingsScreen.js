@@ -20,7 +20,7 @@ import {
   getDoc
 } from 'firebase/firestore';
 
-export default function MyBookingsScreen() {
+const MyBookingsScreen = () => {
   const [booking, setBooking] = useState(null);
   const [renterInfo, setRenterInfo] = useState(null);
   const [ownerInfo, setOwnerInfo] = useState(null);
@@ -157,10 +157,12 @@ export default function MyBookingsScreen() {
         <Text>Model: {booking.model || 'N/A'}</Text>
         <Text>Plate: {booking.plate || 'N/A'}</Text>
         <Text>Rate: ${booking.cost || '0'}</Text>
-        {booking.image ? (
+
+        {/* Display the image if available */}
+        {booking.photo || booking.image ? (
           <Image
             style={styles.carImage}
-            source={{ uri: booking.image }}
+            source={{ uri: booking.image || booking.photo }}
             resizeMode="cover"
           />
         ) : (
@@ -187,7 +189,7 @@ export default function MyBookingsScreen() {
       />
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -238,3 +240,5 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 });
+
+export default MyBookingsScreen;
