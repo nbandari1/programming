@@ -6,7 +6,8 @@ import {
   Button,
   Alert,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  ScrollView
 } from 'react-native';
 import { db, auth } from '../firebaseConfig';
 import {
@@ -22,6 +23,7 @@ import {
 export default function MyBookingsScreen() {
   const [booking, setBooking] = useState(null);
   const [renterInfo, setRenterInfo] = useState(null);
+  const [ownerInfo, setOwnerInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchBooking = async () => {
@@ -43,6 +45,8 @@ export default function MyBookingsScreen() {
 
       if (bookingsSnapshot.empty) {
         setBooking(null);
+        setRenterInfo(null);
+        setOwnerInfo(null);
         setLoading(false);
         return;
       }
@@ -54,13 +58,25 @@ export default function MyBookingsScreen() {
       };
       setBooking(bookingData);
 
+      // Fetch renter info
       const renterRef = doc(db, 'users', renterId);
       const renterSnap = await getDoc(renterRef);
-
       if (renterSnap.exists()) {
         setRenterInfo(renterSnap.data());
       } else {
         console.warn("Renter info not found");
+      }
+
+      // Fetch owner info
+      const ownerId = bookingData.ownerId;
+      if (ownerId) {
+        const ownerRef = doc(db, 'users', ownerId);
+        const ownerSnap = await getDoc(ownerRef);
+        if (ownerSnap.exists()) {
+          setOwnerInfo(ownerSnap.data());
+        } else {
+          console.warn("Owner info not found");
+        }
       }
 
     } catch (err) {
@@ -100,13 +116,16 @@ export default function MyBookingsScreen() {
     return (
       <View style={styles.container}>
         <Text style={styles.emptyMessage}>No active bookings found.</Text>
+        <Button title="Refresh" onPress={fetchBooking} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Booking Confirmation</Text>
+
+      <Button title="Refresh" onPress={fetchBooking} />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Renter Info</Text>
@@ -121,18 +140,29 @@ export default function MyBookingsScreen() {
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Owner Info</Text>
+        {ownerInfo ? (
+          <>
+            <Text>First Name: {ownerInfo.firstName}</Text>
+            <Text>Last Name: {ownerInfo.lastName}</Text>
+          </>
+        ) : (
+          <Text>Owner info not available</Text>
+        )}
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Vehicle Details</Text>
         <Text>Make: {booking.make || 'N/A'}</Text>
         <Text>Model: {booking.model || 'N/A'}</Text>
         <Text>Plate: {booking.plate || 'N/A'}</Text>
         <Text>Rate: ${booking.cost || '0'}</Text>
         {booking.image ? (
-        <Image
-          source={{ uri: booking.photo }}
-          style={styles.image}
-          resizeMode="contain"
-        onError={(e) => console.log('Image loading error:', e.nativeEvent.error)}
-        />
+          <Image
+            style={styles.carImage}
+            source={{ uri: booking.image }}
+            resizeMode="cover"
+          />
         ) : (
           <Text>No image available</Text>
         )}
@@ -155,15 +185,15 @@ export default function MyBookingsScreen() {
         onPress={cancelBooking}
         color="#ff4444"
       />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
     backgroundColor: '#fff',
+    flexGrow: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -196,12 +226,15 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 150,
     marginTop: 10,
-    borderRadius: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
   emptyMessage: {
     fontSize: 18,
     textAlign: 'center',
     marginTop: 50,
     color: '#666',
+    marginBottom: 20,
   },
 });
