@@ -60,14 +60,30 @@ export default function SearchScreen() {
     try {
       const snapshot = await getDocs(collection(db, 'listings'));
       const results = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-      const listingsWithExtraInfo = await Promise.all(
+  
+      const listingsWithExtras = await Promise.all(
         results.map(async (listing) => {
           try {
-            const geocoded = await Location.geocodeAsync(listing.address);
-            if (geocoded.length === 0) return null;
-
-            // 🔍 Fetch owner info
+            let coordinate = null;
+  
+            if (listing.address && listing.address.trim().length > 0) {
+              const geocoded = await Location.geocodeAsync(listing.address);
+              if (geocoded.length > 0) {
+                coordinate = geocoded[0];
+              } else {
+                console.warn(`Could not geocode address for ${listing.make}: ${listing.address}`);
+              }
+            }
+  
+            // If geocoding fails, use fallback coords (e.g. downtown Toronto)
+            if (!coordinate) {
+              coordinate = {
+                latitude: 43.6532,
+                longitude: -79.3832,
+              };
+            }
+  
+            // Fetch owner info
             let ownerName = 'N/A';
             if (listing.owner) {
               const ownerRef = doc(db, 'users', listing.owner);
@@ -77,26 +93,29 @@ export default function SearchScreen() {
                 ownerName = `${ownerData.firstName} ${ownerData.lastName}`;
               }
             }
-
+  
             return {
               ...listing,
-              coordinate: geocoded[0],
-              ownerName: ownerName,
+              coordinate,
+              ownerName,
+              imageUrl: listing.photo || null,
             };
           } catch (error) {
-            console.warn('Listing skipped due to error:', error);
+            console.warn('Listing skipped due to error:', error.message);
             return null;
           }
         })
       );
-
-      setListings(listingsWithExtraInfo.filter(Boolean));
+  
+      setListings(listingsWithExtras.filter(Boolean));
     } catch (err) {
+      console.error('Error loading listings:', err);
       Alert.alert('Error', 'Could not load listings.');
     } finally {
       setLoading(false);
     }
   };
+  
 
   const centerMapToCity = async () => {
     try {
@@ -120,25 +139,28 @@ export default function SearchScreen() {
     try {
       const auth = getAuth();
       const renterId = auth.currentUser?.uid;
-
+  
       if (!renterId) {
         Alert.alert('Not logged in', 'You must be logged in to book.');
         return;
       }
-
+  
+      // Delete existing booking for this user
       const q = query(collection(db, 'bookings'), where('renterId', '==', renterId));
       const existing = await getDocs(q);
       existing.forEach(async (docu) => {
         await deleteDoc(doc(db, 'bookings', docu.id));
       });
-
+  
+      // Get renter's first and last name
       const userRef = doc(db, 'users', renterId);
       const userSnap = await getDoc(userRef);
       const renterFirstName = userSnap.exists() ? userSnap.data().firstName : 'N/A';
       const renterLastName = userSnap.exists() ? userSnap.data().lastName : 'N/A';
-
-      const code = Math.floor(100000 + Math.random() * 900000);
-
+  
+      const code = Math.floor(100000 + Math.random() * 900000); // 6-digit confirmation code
+  
+      // Create booking with image included
       await addDoc(collection(db, 'bookings'), {
         renterId,
         renterFirstName,
@@ -150,12 +172,13 @@ export default function SearchScreen() {
         cost: car.cost,
         address: car.address,
         city: car.city,
+        photo: car.imageUrl || null,  // 👈 Add image here
         confirmationCode: code,
         ownerId: car.owner,
         status: 'booked',
         date: new Date().toISOString(),
       });
-
+  
       Alert.alert(
         'Booking Confirmed',
         `Confirmation code: ${code}\nPickup: ${car.address}, ${car.city}`
@@ -166,6 +189,7 @@ export default function SearchScreen() {
       Alert.alert('Booking Failed', 'Try again later.');
     }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -212,7 +236,11 @@ export default function SearchScreen() {
             {selectedCar && (
               <>
                 {selectedCar.imageUrl && (
-                  <Image source={{ uri: selectedCar.imageUrl }} style={styles.carImage} />
+                  <Image
+                    source={{ uri: selectedCar.imageUrl }}
+                    style={styles.carImage}
+                    resizeMode="cover"
+                  />
                 )}
                 <Text style={styles.popupTitle}>
                   {selectedCar.make} {selectedCar.model}
