@@ -1,0 +1,91 @@
+#!/bin/sh
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
+# --- Helper function to attempt sourcing shell configs on Unix-like systems ---
+source_shell_configs_if_needed() {
+  # Only proceed if npm is not found
+  if command -v npm >/dev/null 2>&1; then
+    echo "npm found in PATH. No extra sourcing needed." >&2
+    return 0
+  fi
+
+  echo "npm not found in PATH. Attempting to source shell configurations..." >&2
+  platform=$(uname)
+
+  if [ "$platform" = "Linux" ] || [ "$platform" = "Darwin" ]; then # Darwin is macOS
+    echo "Detected $platform. Will try to source common user profiles." >&2
+
+    # Attempt to source nvm if it exists
+    export NVM_DIR="$HOME/.nvm"
+    if [ -s "$NVM_DIR/nvm.sh" ]; then
+      echo "Sourcing nvm from $NVM_DIR/nvm.sh" >&2
+      . "$NVM_DIR/nvm.sh"
+    fi
+
+    # Attempt to source fnm if it exists (example, adapt if your team uses it)
+    # if command -v fnm >/dev/null 2>&1; then
+    #   echo "Sourcing fnm environment" >&2
+    #   eval "$(fnm env --shell=sh)" # Use sh for #!/bin/sh scripts
+    # fi
+
+    # As a general fallback, try to source profile files
+    # These are more likely to be set up for GUI-app environments than .bashrc/.zshrc
+    # Test these carefully, as sourcing them can have side effects if they expect interactivity.
+    # .zshenv is generally safer for Zsh users as it's meant for env vars.
+    if [ -f "$HOME/.zshenv" ] && [ "$(basename "$SHELL")" = "zsh" ]; then
+      echo "Sourcing $HOME/.zshenv" >&2
+      . "$HOME/.zshenv"
+    elif [ -f "$HOME/.bash_profile" ] && [ "$(basename "$SHELL")" = "bash" ]; then
+      echo "Sourcing $HOME/.bash_profile" >&2
+      . "$HOME/.bash_profile"
+    elif [ -f "$HOME/.profile" ]; then # Generic fallback
+      echo "Sourcing $HOME/.profile" >&2
+      . "$HOME/.profile"
+    fi
+
+    # Re-check for npm after attempting to source
+    if ! command -v npm >/dev/null 2>&1; then
+      echo "Warning: npm still not found after attempting to source common profiles." >&2
+      echo "The pre-commit hook might fail if npm is required for subsequent commands." >&2
+    else
+      echo "npm found after sourcing. Path: $(command -v npm)" >&2
+    fi
+  else
+    echo "Not on Linux or macOS ($platform detected). Skipping Unix-specific sourcing." >&2
+    echo "If npm is not found on this system, please ensure it's in your system PATH." >&2
+  fi
+}
+
+# --- Attempt to source configs if npm is not immediately available ---
+# We call this function early. If npm is already in path, it does little.
+source_shell_configs_if_needed
+
+# --- Final check for npm before running critical commands ---
+if ! command -v npm >/dev/null 2>&1; then
+  echo "Error: npm command not found." >&2
+  echo "Please ensure Node.js and npm are installed and accessible in your system's PATH." >&2
+  echo "Current PATH is: $PATH" >&2
+  exit 1
+fi
+
+echo "🚀 Pre-commit checks starting..."
+
+# Type check
+echo "🔍 Running TypeScript type check..."
+if ! npm run type-check; then
+  echo "❌ TypeScript type check failed. Please fix the type errors before committing."
+  exit 1
+fi
+echo "✅ TypeScript type check passed!"
+
+# Lint and format staged files
+echo "🎨 Running linting and formatting on staged files..."
+if ! npx lint-staged; then
+  echo "❌ Linting or formatting failed. Please fix the issues before committing."
+  exit 1
+fi
+echo "✅ Linting and formatting completed!"
+
+echo "🎉 All pre-commit checks passed!" >&2
+exit 0

@@ -1,0 +1,13 @@
+android/
+ios/
+node_modules/
+.expo/
+.expo-shared/
+dist/
+build/
+coverage/
+*.log
+.git/
+.husky/_/
+bun.lock
+package-lock.json
