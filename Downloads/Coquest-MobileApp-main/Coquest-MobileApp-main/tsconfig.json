@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "jsx": "react-jsx",
+    "strict": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "app/**/*",
+    "apollo/**/*",
+    "backendproxy/**/*",
+    "redux/**/*",
+    "helpers/**/*",
+    "constants/**/*",
+    "utils/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "scripts",
+    "assets",
+    "style"
+  ],
+  "extends": "expo/tsconfig.base"
+}
